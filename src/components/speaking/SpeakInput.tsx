@@ -45,6 +45,12 @@ export function SpeakInput({
     }
   }, [sr.transcript, sr.listening, sr.alternatives, onResult, pickBest])
 
+  // No microphone access (blocked or not present): switch to typing automatically.
+  const micBlocked = !!sr.error && /blocked|not allowed|No microphone/i.test(sr.error)
+  useEffect(() => {
+    if (micBlocked) setTypingState(true)
+  }, [micBlocked])
+
   // Stop recording when recognition ends.
   const { recording, stop: stopRecording } = rec
   useEffect(() => {
@@ -79,9 +85,11 @@ export function SpeakInput({
   if (typing) {
     return (
       <div className="space-y-2">
-        {!sr.supported && (
+        {(!sr.supported || micBlocked) && (
           <p className="rounded-2xl bg-amber-400/10 px-4 py-2.5 text-sm text-amber-800 dark:text-amber-200">
-            🎤 Speech recognition works in Chrome, Edge and Safari. Here you can say it aloud and then type what you said.
+            {micBlocked
+              ? '🎤 The microphone is not available here. Say the answer aloud, then type what you said.'
+              : '🎤 Speech recognition works in Chrome, Edge and Safari. Here you can say it aloud and then type what you said.'}
           </p>
         )}
         <form
